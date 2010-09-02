@@ -264,7 +264,7 @@ class Application(wx.App):
         wx.App.__init__(self, redirect=False)
 
     def OnInit(self):
-        frame = GUI(None, -1, "Dawne's Image Ranker")
+        frame = GUI(None, -1, "Image Ranker")
         frame.Show(True)
         return True
         
