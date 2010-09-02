@@ -1,0 +1,7 @@
+Wrote this program to learn wxPython and develop something my wife could
+use to comb through our 2000 wedding photos and decide which she wanted 
+to get prints of.  Basically, you can import entire directories (recursively)
+or individual files, rank the photos, save your session (as a python pickle
+file), restore your session, and export the photoes of a certain rank to
+another folder.  Should only need Python (my version 2.5) and wxPython (my 
+version 2.8.10).
