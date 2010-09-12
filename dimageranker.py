@@ -3,6 +3,8 @@ import sys, os
 import pickle
 from shutil import copy
 import wx
+from PIL import Image
+from PIL.ExifTags import TAGS
 """
 To Do:
 1. Is there a way to make the initial image grey?
@@ -13,6 +15,7 @@ To Do:
 6. Iphoto Library support (ambitious!)
 7. Refactor!
 8. Make the parameters configurable through an Edit Menu
+9. Exif Data
 
 """
 
@@ -37,7 +40,7 @@ class Parameters():
         
 class GUI(wx.Frame):
     def __init__(self, parent, id, title):
-        wx.Frame.__init__(self, parent, id, title, size=(900, 700))
+        wx.Frame.__init__(self, parent, id, title, size=(1000, 800))
         self.Center(direction=wx.BOTH)
         self.functions = Events(self)
         self.parameters = Parameters()
@@ -89,6 +92,15 @@ class GUI(wx.Frame):
         spacer2 = wx.StaticText(self.rightpanel, -1, "")
         self.radioGroup = wx.RadioBox(self.rightpanel, -1, "Rank the photo", wx.DefaultPosition, wx.DefaultSize, \
             self.parameters.rankList, 1, wx.RA_SPECIFY_COLS)
+        spacer3 = wx.StaticText(self.rightpanel, -1, "")
+        label1 = wx.StaticText(self.rightpanel, -1, "Exif Data")
+        spacer4 = wx.StaticText(self.rightpanel, -1, "")
+        self.list1=wx.ListCtrl(self.rightpanel,-1,size=(250,250), style=wx.LC_REPORT|wx.SUNKEN_BORDER)
+
+        self.list1.InsertColumn(0,"Tag")
+        self.list1.InsertColumn(1,"Value")
+        self.list1.SetColumnWidth(0, 125)
+        self.list1.SetColumnWidth(1, 125)
 
         #Add right hand side sizers
         righthsizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -98,6 +110,10 @@ class GUI(wx.Frame):
         rightvsizer.Add(prevBtn)
         rightvsizer.Add(spacer2)
         rightvsizer.Add(self.radioGroup)
+        rightvsizer.Add(spacer3)
+        rightvsizer.Add(label1)
+        rightvsizer.Add(spacer4)
+        rightvsizer.Add(self.list1)
         righthsizer.Add((20,20), flag=wx.EXPAND)
         righthsizer.Add(rightvsizer)
         righthsizer.Add((20,20), flag=wx.EXPAND)
@@ -185,6 +201,8 @@ class Events():
         else:
             rank = self.gui.radioGroup.GetSelection()
             self.container.setRank(rank)
+            #increments the viewer one image - not sure if i want to do this
+            #self.OnNext(evt)
             
     def OnSavePickle(self, evt):
         dialog = wx.FileDialog(None, "Choose a file", os.getcwd(), "", self.parameters.wildcard, wx.SAVE)
@@ -258,6 +276,22 @@ class Events():
         self.gui.statusbar.SetStatusText("Displaying Image %s of %s: File: %s" \
             % (self.container.position + 1, len(self.container.fileList), self.container.fileList[self.container.position]))
         self.gui.leftpanel.Refresh()
+        exifData = self.getExif(filepath)
+        self.gui.list1.DeleteAllItems()
+        for tag in exifData:
+            pos = self.gui.list1.InsertStringItem(0, str(tag))
+            self.gui.list1.SetStringItem(pos, 1, str(exifData[tag]))
+        self.gui.rightpanel.Refresh()
+        
+        
+    def getExif(self, filepath):
+        exifData = {}
+        i = Image.open(filepath)
+        info = i._getexif()
+        for tag, value in info.items():
+            decoded = TAGS.get(tag, tag)
+            exifData[decoded] = value
+        return exifData
 
 class Application(wx.App):
     def __init__(self, redirect=False):
